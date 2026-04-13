@@ -1,0 +1,31 @@
+# Node
+node_modules/
+npm-debug.log*
+
+# Rust / Tauri build artifacts
+src-tauri/target/
+src-tauri/WixTools/
+src-tauri/gen/
+dist/
+
+# Logs & temp
+*.log
+check_output.txt
+project_context.md
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Claude Code local settings
+.claude/
+
+# Secrets
+.env
+.env.local

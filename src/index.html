@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FlowTrust</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ ШАПКА ═══ -->
+  <header>
+    <div class="logo">FLOW<span>TRUST</span></div>
+    <div class="header-stats">
+      <span data-i18n-wrap="header_total"><span class="stat-value" id="hdr-total">—</span></span>
+      <span data-i18n-wrap="header_critical"><span class="stat-value" id="hdr-critical" style="color:#ff4444">—</span></span>
+      <span data-i18n-wrap="header_threats"><span class="stat-value" id="hdr-threats" style="color:#ff9900">—</span></span>
+    </div>
+    <button class="lang-btn" id="lang-btn">EN</button>
+  </header>
+
+  <!-- ═══ ВКЛАДКИ ═══ -->
+  <nav>
+    <button class="tab-btn active" data-tab="analysis"    data-i18n="tab_analysis">АНАЛИЗ</button>
+    <button class="tab-btn"        data-tab="network"     data-i18n="tab_network">СЕТЬ</button>
+    <button class="tab-btn"        data-tab="startup"     data-i18n="tab_startup">АВТОЗАГРУЗКА</button>
+    <button class="tab-btn"        data-tab="forensics"   data-i18n="tab_forensics">ФОРЕНЗИКА</button>
+    <button class="tab-btn"        data-tab="unlock"      data-i18n="tab_unlock">РАЗБЛОКИРОВКА</button>
+    <button class="tab-btn"        data-tab="tools"       data-i18n="tab_tools">ИНСТРУМЕНТЫ</button>
+    <button class="tab-btn"        data-tab="filemanager" data-i18n="tab_filemanager">ФАЙЛЫ</button>
+    <button class="tab-btn"        data-tab="settings"    data-i18n="tab_settings">НАСТРОЙКИ</button>
+    <button class="tab-btn"        data-tab="about"       data-i18n="tab_about">О ПРОГРАММЕ</button>
+  </nav>
+
+  <main>
+
+    <!-- ═══ АНАЛИЗ ═══ -->
+    <div class="tab-panel active" id="panel-analysis">
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="search-input" data-i18n-ph="search_proc" placeholder="Поиск по имени, PID, пользователю..." />
+        </div>
+        <button class="btn" id="refresh-btn"       data-i18n="refresh">↻ ОБНОВИТЬ</button>
+        <button class="btn" id="auto-refresh-btn"  data-i18n="auto_off">АВТО: ВЫКЛ</button>
+        <button class="btn btn-sm" id="tree-view-btn"   data-i18n="tree_view">🌳 ДЕРЕВО</button>
+        <button class="btn btn-sm" id="export-proc-btn" data-i18n="export_btn">↓ ЭКСПОРТ</button>
+        <div class="process-count"><span data-i18n="shown">Показано</span>: <span id="proc-count"><span>—</span></span></div>
+      </div>
+
+      <div class="analysis-body">
+        <div class="table-wrapper" id="analysis-table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="col-pid"    data-col="pid"         data-i18n="col_pid">PID</th>
+                <th class="col-name"   data-col="name"        data-i18n="col_process">ПРОЦЕСС</th>
+                <th class="col-user"   data-col="user"        data-i18n="col_user">ПОЛЬЗОВАТЕЛЬ</th>
+                <th class="col-status" data-col="status"      data-i18n="col_status">СТАТУС</th>
+                <th class="col-cpu"    data-col="cpu_percent" data-i18n="col_cpu">CPU</th>
+                <th class="col-mem"    data-col="memory_mb"   data-i18n="col_mem">ПАМЯТЬ</th>
+                <th class="col-action"></th>
+              </tr>
+            </thead>
+            <tbody id="process-tbody">
+              <tr><td colspan="7"><div class="state-overlay"><div class="spinner"></div><div class="label" data-i18n="initializing">Инициализация...</div></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <aside class="detail-panel" id="detail-panel">
+          <div class="detail-header">
+            <span class="detail-title" id="detail-name">—</span>
+            <button class="detail-close" id="detail-close">✕</button>
+          </div>
+          <div class="detail-body">
+            <div class="detail-section"><div class="detail-label" data-i18n="col_pid">PID</div><div class="detail-value" id="d-pid">—</div></div>
+            <div class="detail-section"><div class="detail-label" data-i18n="col_status">СТАТУС</div><div class="detail-value" id="d-status">—</div></div>
+            <div class="detail-section"><div class="detail-label" data-i18n="col_user">ПОЛЬЗОВАТЕЛЬ</div><div class="detail-value" id="d-user">—</div></div>
+            <div class="detail-section"><div class="detail-label" data-i18n="detail_path">ПУТЬ</div><div class="detail-value detail-path" id="d-path">—</div></div>
+            <div class="detail-section"><div class="detail-label" data-i18n="detail_sig">ПОДПИСЬ</div><div class="detail-value" id="d-sig"><span class="sig-badge sig-unknown">ПРОВЕРКА...</span></div></div>
+            <div class="detail-section"><div class="detail-label" data-i18n="col_cpu">CPU</div><div class="detail-value" id="d-cpu">—</div></div>
+            <div class="detail-section"><div class="detail-label" data-i18n="col_mem">ПАМЯТЬ</div><div class="detail-value" id="d-mem">—</div></div>
+            <div class="detail-section">
+              <div class="detail-label" data-i18n="chart_history">ИСТОРИЯ НАГРУЗКИ</div>
+              <canvas id="d-cpu-chart" class="sparkline-canvas" width="236" height="36"></canvas>
+              <canvas id="d-mem-chart" class="sparkline-canvas" width="236" height="36"></canvas>
+            </div>
+            <div class="detail-actions">
+              <button class="btn btn-danger" id="d-kill-btn"      data-i18n="kill_btn">⊘ ЗАВЕРШИТЬ ПРОЦЕСС</button>
+              <button class="btn btn-open"   id="d-open-loc-btn"  data-i18n="ctx_open_location">📂 ОТКРЫТЬ РАСПОЛОЖЕНИЕ</button>
+              <button class="btn btn-sm"     id="d-dll-btn"       data-i18n="dll_view_btn">📦 ПРОСМОТР DLL</button>
+              <button class="btn btn-uncrit" id="d-uncrit-btn"    data-i18n="uncrit_btn" style="display:none">🛡 СНЯТЬ КРИТИЧНОСТЬ</button>
+            </div>
+            <div id="d-uncrit-status" class="detail-uncrit-status" style="display:none"></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+
+    <!-- ═══ СЕТЬ ═══ -->
+    <div class="tab-panel" id="panel-network">
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="net-search" data-i18n-ph="search_net" placeholder="Поиск по процессу, адресу, порту..." />
+        </div>
+        <button class="btn" id="net-refresh-btn" data-i18n="refresh">↻ ОБНОВИТЬ</button>
+        <div class="process-count"><span data-i18n="connections">Соединений</span>: <span id="net-count"><span>—</span></span></div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-pid"     data-net-col="pid"          data-i18n="col_pid">PID</th>
+              <th class="col-netname" data-net-col="process_name" data-i18n="col_process">ПРОЦЕСС</th>
+              <th class="col-proto"   data-net-col="protocol"     data-i18n="col_proto">ПРОТОКОЛ</th>
+              <th class="col-laddr"   data-net-col="local_addr"   data-i18n="col_local">ЛОКАЛЬНЫЙ</th>
+              <th class="col-raddr"   data-net-col="remote_addr"  data-i18n="col_remote">УДАЛЁННЫЙ</th>
+              <th class="col-state"   data-net-col="state"        data-i18n="col_state">СОСТОЯНИЕ</th>
+            </tr>
+          </thead>
+          <tbody id="net-tbody">
+            <tr><td colspan="6"><div class="state-overlay"><div class="icon">⬡</div><div class="label" data-i18n="wait_refresh">Нажмите ОБНОВИТЬ для загрузки соединений</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ АВТОЗАГРУЗКА ═══ -->
+    <div class="tab-panel" id="panel-startup">
+      <div class="toolbar">
+        <div class="subtab-group">
+          <button class="subtab-btn active" data-subtab="all"      data-i18n="su_all">ВСЕ</button>
+          <button class="subtab-btn"        data-subtab="registry" data-i18n="su_registry">РЕЕСТР</button>
+          <button class="subtab-btn"        data-subtab="winlogon" data-i18n="su_winlogon">WINLOGON</button>
+          <button class="subtab-btn"        data-subtab="appinit"  data-i18n="su_appinit">APPINIT</button>
+          <button class="subtab-btn"        data-subtab="tasks"    data-i18n="su_tasks">ЗАДАЧИ</button>
+        </div>
+        <div class="search-box">
+          <span class="search-icon">⌕</span>
+          <input type="text" id="startup-search" data-i18n-ph="search_startup" placeholder="Поиск по имени, команде..." />
+        </div>
+        <button class="btn" id="startup-refresh-btn" data-i18n="refresh">↻ ОБНОВИТЬ</button>
+        <div class="process-count"><span data-i18n="startup_records">Записей</span>: <span id="startup-count"><span>—</span></span></div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-su-name" data-su-col="name"     data-i18n="col_name">ИМЯ</th>
+              <th class="col-su-src"                         data-i18n="col_source">ИСТОЧНИК</th>
+              <th class="col-su-loc"  data-su-col="location" data-i18n="col_regkey">КЛЮЧ / ЗАДАЧА</th>
+              <th class="col-su-cmd"  data-su-col="command"  data-i18n="col_command">КОМАНДА</th>
+              <th class="col-su-flag"></th>
+            </tr>
+          </thead>
+          <tbody id="startup-tbody">
+            <tr><td colspan="5"><div class="state-overlay"><div class="icon">⬡</div><div class="label" data-i18n="wait_startup">Нажмите ОБНОВИТЬ</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ ФОРЕНЗИКА ═══ -->
+    <div class="tab-panel" id="panel-forensics">
+      <div class="fo-toolbar">
+        <div class="fo-toolbar-left">
+          <div class="search-box">
+            <span class="search-icon">⌕</span>
+            <input type="text" id="forensics-search" data-i18n-ph="search_forensics" placeholder="Поиск по процессу, угрозе..." />
+          </div>
+          <button class="btn fo-scan-btn" id="forensics-refresh-btn" data-i18n="scan">↻ СКАНИРОВАТЬ</button>
+        </div>
+        <div class="fo-toolbar-actions">
+          <button class="fo-act-btn fo-act-vt"         id="fo-vt-btn"         data-i18n="fo_vt_btn">🔎 VirusTotal</button>
+          <button class="fo-act-btn fo-act-quarantine"  id="fo-quarantine-btn" data-i18n="fo_quarantine_btn">📦 В карантин</button>
+          <button class="fo-act-btn fo-act-delete"      id="fo-delete-btn"     data-i18n="fo_delete_btn">✕ Удалить</button>
+        </div>
+        <div class="fo-toolbar-right">
+          <button class="btn btn-sm" id="export-threats-btn" data-i18n="export_btn">↓ ЭКСПОРТ</button>
+          <div class="fo-count-badge">
+            <span class="fo-count-label" data-i18n="threats_count">Угроз</span>
+            <span class="fo-count-num" id="forensics-count">—</span>
+          </div>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th class="col-fo-ck"><input type="checkbox" id="fo-check-all" title="Выбрать все"></th>
+              <th class="col-pid"      data-fo-col="pid"          data-i18n="col_pid">PID</th>
+              <th class="col-fo-name"  data-fo-col="process_name" data-i18n="col_process">ПРОЦЕСС</th>
+              <th class="col-fo-type"  data-fo-col="threat_type"  data-i18n="col_threat">ТИП УГРОЗЫ</th>
+              <th class="col-fo-sev"   data-fo-col="severity"     data-i18n="col_severity">КРИТИЧНОСТЬ</th>
+              <th class="col-fo-risk"  data-fo-col="risk"         data-i18n="col_risk">РИСК</th>
+              <th class="col-fo-desc"  data-fo-col="description"  data-i18n="col_desc">ОПИСАНИЕ</th>
+              <th class="col-fo-path"  data-fo-col="path"         data-i18n="detail_path">ПУТЬ</th>
+            </tr>
+          </thead>
+          <tbody id="forensics-tbody">
+            <tr><td colspan="8"><div class="state-overlay"><div class="icon">⬡</div><div class="label" data-i18n="wait_scan">Нажмите СКАНИРОВАТЬ для анализа угроз</div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ РАЗБЛОКИРОВКА ═══ -->
+    <div class="tab-panel" id="panel-unlock">
+      <div class="toolbar">
+        <button class="btn" id="unlock-check-btn"  data-i18n="unlock_check">⟳ ПРОВЕРИТЬ СТАТУС</button>
+        <button class="btn" id="unlock-all-btn"    data-i18n="unlock_all">🔓 РАЗБЛОКИРОВАТЬ ВСЕ</button>
+        <button class="btn" id="unlock-sel-btn"    data-i18n="unlock_selected">✓ РАЗБЛОКИРОВАТЬ ВЫБРАННЫЕ</button>
+        <div class="process-count" id="unlock-status-count"></div>
+      </div>
+      <div class="table-wrapper">
+        <table id="unlock-table">
+          <thead>
+            <tr>
+              <th class="col-ck"><input type="checkbox" id="unlock-check-all" title="Выбрать все"></th>
+              <th class="col-restriction sortable" data-sort="name"   data-i18n="col_restriction">ОГРАНИЧЕНИЕ</th>
+              <th class="col-rest-desc sortable"   data-sort="desc"   data-i18n="col_rest_desc">ОПИСАНИЕ ОГРАНИЧЕНИЯ</th>
+              <th class="col-rest-stat sortable"   data-sort="status" data-i18n="col_rest_status">СТАТУС</th>
+            </tr>
+          </thead>
+          <tbody id="unlock-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ═══ ИНСТРУМЕНТЫ ═══ -->
+    <div class="tab-panel" id="panel-tools">
+      <div class="tools-body">
+
+        <div class="tools-section">
+          <div class="tools-section-title" data-i18n="tools_integrity">ЦЕЛОСТНОСТЬ СИСТЕМЫ</div>
+          <div class="tools-grid">
+            <button class="tool-btn" id="t-sfc"           data-i18n="tool_sfc">🛡 SFC /scannow</button>
+            <button class="tool-btn" id="t-mbr"           data-i18n="tool_mbr">💾 Восстановить MBR</button>
+            <button class="tool-btn" id="t-bcd"           data-i18n="tool_bcd">⚙ Перестроить BCD</button>
+            <button class="tool-btn" id="t-accessibility" data-i18n="tool_accessibility">🔑 Восстановить sethc / utilman</button>
+            <button class="tool-btn" id="t-logonui"       data-i18n="tool_logonui">🖥 Восстановить LogonUI</button>
+            <button class="tool-btn" id="t-fonts"         data-i18n="tool_fonts">🔤 Починить шрифты</button>
+          </div>
+        </div>
+
+        <div class="tools-section">
+          <div class="tools-section-title" data-i18n="tools_system">НАСТРОЙКИ СИСТЕМЫ</div>
+          <div class="tools-grid">
+            <button class="tool-btn" id="t-uac"      data-i18n="tool_uac">🛡 Включить UAC</button>
+            <button class="tool-btn" id="t-assoc"    data-i18n="tool_assoc">🔗 Восстановить ассоциации файлов</button>
+            <button class="tool-btn" id="t-keyboard" data-i18n="tool_keyboard">⌨ Восстановить клавиатуру</button>
+            <button class="tool-btn" id="t-mouse"    data-i18n="tool_mouse">🖱 Восстановить мышь</button>
+            <button class="tool-btn" id="t-hosts"    data-i18n="tool_hosts">📄 Сбросить Hosts-файл</button>
+            <button class="tool-btn" id="t-proxy"    data-i18n="tool_proxy">🌐 Сбросить прокси</button>
+          </div>
+        </div>
+
+        <div class="tools-section">
+          <div class="tools-section-title" data-i18n="tools_rootkit">ОБНАРУЖЕНИЕ РУТКИТОВ</div>
+          <div class="tools-section-hint" data-i18n="tools_rootkit_hint">Сравнивает TlHelp32 и PSAPI, затем brute-force сканирует PID 4–65535. Скрытым считается процесс с видимым путём к образу, но отсутствующий в стандартных списках.</div>
+          <div class="tools-grid">
+            <button class="tool-btn" id="t-hidden-procs" data-i18n="tool_hidden_procs">🔍 Найти скрытые процессы</button>
+          </div>
+          <div id="rootkit-result" class="rootkit-result" style="display:none">
+            <div class="tool-output-header">
+              <span data-i18n="tool_hidden_result">РЕЗУЛЬТАТ СКАНИРОВАНИЯ</span>
+              <button class="tool-clear-btn" id="rootkit-clear-btn">✕</button>
+            </div>
+            <table class="rootkit-table">
+              <thead>
+                <tr>
+                  <th>PID</th>
+                  <th data-i18n="col_process">ПРОЦЕСС</th>
+                  <th>TlHelp32</th>
+                  <th>PSAPI</th>
+                  <th data-i18n="col_desc">ОПИСАНИЕ</th>
+                </tr>
+              </thead>
+              <tbody id="rootkit-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tools-section">
+          <div class="tools-section-title" data-i18n="tools_dll">ПРОСМОТР DLL ПРОЦЕССА</div>
+          <div class="tools-section-hint" data-i18n="tools_dll_hint">Введите PID процесса и нажмите «ЗАГРУЗИТЬ DLL». Можно также нажать «ПРОСМОТР DLL» в панели деталей процесса — PID подставится автоматически. Требуются права администратора для системных процессов.</div>
+          <div class="dll-search-row">
+            <input type="number" id="dll-pid-input" class="dll-pid-input" placeholder="PID" min="1" />
+            <button class="btn btn-sm" id="t-dll-load" data-i18n="dll_load_btn">📦 ЗАГРУЗИТЬ DLL</button>
+          </div>
+          <div id="dll-result" style="display:none">
+            <table class="dll-table">
+              <thead>
+                <tr>
+                  <th class="dll-col-name" data-i18n="col_name">ИМЯ</th>
+                  <th class="dll-col-path" data-i18n="detail_path">ПУТЬ</th>
+                  <th class="dll-col-base">BASE</th>
+                  <th class="dll-col-size">РАЗМЕР</th>
+                </tr>
+              </thead>
+              <tbody id="dll-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="tools-section">
+          <div class="tools-section-title" data-i18n="tools_browser">БРАУЗЕР</div>
+          <div class="tools-browser-row">
+            <input type="text" id="browser-url" class="browser-url-input" placeholder="https://..." value="https://www.virustotal.com" />
+            <button class="btn" id="t-browser" data-i18n="tool_browser_open">🌐 ОТКРЫТЬ</button>
+          </div>
+          <div class="browser-bookmarks">
+            <button class="bm-btn" data-url="https://www.virustotal.com">VirusTotal</button>
+            <button class="bm-btn" data-url="https://any.run">Any.run</button>
+            <button class="bm-btn" data-url="https://www.hybrid-analysis.com">Hybrid Analysis</button>
+            <button class="bm-btn" data-url="https://www.malwarebytes.com/adwcleaner">AdwCleaner</button>
+            <button class="bm-btn" data-url="https://support.microsoft.com/ru-ru/windows">Windows Help</button>
+          </div>
+        </div>
+
+        <div class="tool-output-box">
+          <div class="tool-output-header">
+            <span data-i18n="tool_output">ВЫВОД</span>
+            <button class="tool-clear-btn" id="tool-clear-btn">✕ ОЧИСТИТЬ</button>
+          </div>
+          <pre id="tool-output" class="tool-output"></pre>
+        </div>
+
+      </div>
+    </div>
+
+
+    <!-- ═══ ФАЙЛОВЫЙ МЕНЕДЖЕР ═══ -->
+    <div class="tab-panel" id="panel-filemanager">
+
+      <!-- Адресная строка -->
+      <div class="fm-addressbar">
+        <button class="fm-nav-btn" id="fm-root-btn"    title="Диски">⊞</button>
+        <button class="fm-nav-btn" id="fm-up-btn"      title="Вверх">↑</button>
+        <button class="fm-nav-btn" id="fm-refresh-btn" title="Обновить">↻</button>
+        <div class="fm-breadcrumb" id="fm-breadcrumb">
+          <span class="fm-breadcrumb-item fm-bc-root" data-path="">Этот ПК</span>
+        </div>
+        <div class="fm-search-box">
+          <span>⌕</span>
+          <input type="text" id="fm-search" placeholder="Поиск..." autocomplete="off" />
+        </div>
+      </div>
+
+      <!-- Тулбар действий -->
+      <div class="fm-actions">
+        <button class="fm-action-btn" id="fm-newfolder-btn" title="Новая папка">
+          <span class="fm-act-icon">📁</span><span data-i18n="fm_new_folder">Папка</span>
+        </button>
+        <div class="fm-actions-sep"></div>
+        <button class="fm-action-btn" id="fm-copy-btn" title="Копировать">
+          <span class="fm-act-icon">⎘</span><span data-i18n="fm_copy">Копировать</span>
+        </button>
+        <button class="fm-action-btn" id="fm-paste-btn" title="Вставить" disabled>
+          <span class="fm-act-icon">⎙</span><span data-i18n="fm_paste">Вставить</span>
+        </button>
+        <button class="fm-action-btn" id="fm-rename-btn" title="Переименовать">
+          <span class="fm-act-icon">✎</span><span data-i18n="fm_rename">Переим.</span>
+        </button>
+        <div class="fm-actions-sep"></div>
+        <button class="fm-action-btn fm-action-danger" id="fm-delete-btn" title="Удалить">
+          <span class="fm-act-icon">✕</span><span data-i18n="fm_delete">Удалить</span>
+        </button>
+        <div class="fm-actions-right">
+          <span class="fm-info-text" id="fm-count">—</span>
+        </div>
+      </div>
+
+      <!-- Основное тело -->
+      <div class="fm-body">
+
+        <!-- Боковая панель: диски -->
+        <aside class="fm-sidebar" id="fm-sidebar">
+          <div class="fm-sidebar-title">ДИСКИ</div>
+          <div id="fm-drives"></div>
+          <div class="fm-sidebar-title fm-sidebar-title-top" style="margin-top:16px">БЫСТРЫЙ ДОСТУП</div>
+          <div id="fm-quick"></div>
+        </aside>
+
+        <!-- Основная область: список файлов -->
+        <div class="fm-main">
+          <table class="fm-table">
+            <thead>
+              <tr>
+                <th class="fm-col-icon"></th>
+                <th class="fm-col-name" id="fm-th-name">ИМЯ ↕</th>
+                <th class="fm-col-size" id="fm-th-size">РАЗМЕР</th>
+                <th class="fm-col-date" id="fm-th-date">ИЗМЕНЁН</th>
+                <th class="fm-col-attr">АТР</th>
+              </tr>
+            </thead>
+            <tbody id="fm-tbody">
+              <tr><td colspan="5"><div class="state-overlay">
+                <div class="icon" style="font-size:48px">⊞</div>
+                <div class="label" data-i18n="fm_select_drive">Выберите диск</div>
+              </div></td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+      <!-- Статусная строка -->
+      <div class="fm-statusbar" id="fm-status"></div>
+    </div>
+
+    <!-- ═══ НАСТРОЙКИ ═══ -->
+    <div class="tab-panel" id="panel-settings">
+      <div class="settings-body">
+        <div class="settings-section">
+          <div class="settings-title" data-i18n="settings_general">ОБЩИЕ</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_always_on_top">Поверх всех окон</span>
+              <span class="setting-desc" data-i18n="settings_always_on_top_desc">Приложение отображается поверх других окон</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-always-on-top"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_check_updates">Проверять обновления при запуске</span>
+              <span class="setting-desc" data-i18n="settings_check_updates_desc">Автоматическая проверка новых версий</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-check-updates"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_notify">Уведомления об угрозах</span>
+              <span class="setting-desc" data-i18n="settings_notify_desc">Уведомление при обнаружении новых угроз в форензике</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-notify-threats"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-title" data-i18n="settings_analysis">АНАЛИЗ ПРОЦЕССОВ</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_auto_refresh">Автообновление</span>
+              <span class="setting-desc" data-i18n="settings_auto_refresh_desc">Автоматически обновлять список процессов</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-auto-refresh"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_refresh_interval">Интервал обновления</span>
+              <span class="setting-desc" data-i18n="settings_refresh_interval_desc">Период автообновления в секундах</span>
+            </div>
+            <div class="setting-select-wrap">
+              <select id="s-refresh-interval" class="setting-select">
+                <option value="3">3 с</option>
+                <option value="5" selected>5 с</option>
+                <option value="10">10 с</option>
+                <option value="30">30 с</option>
+                <option value="60">60 с</option>
+              </select>
+            </div>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_show_signed">Подписанные в форензике</span>
+              <span class="setting-desc" data-i18n="settings_show_signed_desc">Показывать процессы с подписью в результатах форензики</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-show-signed"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_auto_scan">Автосканирование угроз</span>
+              <span class="setting-desc" data-i18n="settings_auto_scan_desc">Запускать форензику при каждом открытии вкладки</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-auto-scan"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+
+        <div class="settings-section">
+          <div class="settings-title" data-i18n="settings_masquerade">МАСКИРОВКА</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_rotate_name">Периодически менять заголовок окна</span>
+              <span class="setting-desc" data-i18n="settings_rotate_name_desc">Каждые 90 секунд заголовок окна меняется — для обхода мониторинга</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-rotate-name"><span class="toggle-slider"></span></label>
+          </div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_minimize_tray">Сворачивать в трей</span>
+              <span class="setting-desc" data-i18n="settings_minimize_tray_desc">При закрытии окна — скрыть в системный трей</span>
+            </div>
+            <label class="toggle"><input type="checkbox" id="s-minimize-tray"><span class="toggle-slider"></span></label>
+          </div>
+        </div>
+
+        <div class="settings-section">
+          <div class="settings-title" data-i18n="settings_export_sec">ЭКСПОРТ</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name" data-i18n="settings_export_format">Формат экспорта</span>
+              <span class="setting-desc" data-i18n="settings_export_format_desc">Формат файла при экспорте данных</span>
+            </div>
+            <div class="setting-select-wrap">
+              <select id="s-export-format" class="setting-select">
+                <option value="json" selected>JSON</option>
+                <option value="csv">CSV</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="settings-section settings-section-wide">
+          <div class="settings-title" data-i18n="settings_lang">ЯЗЫК / LANGUAGE</div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Interface language</span>
+            </div>
+            <div class="lang-toggle-group">
+              <button class="lang-choice active" data-lang="ru">Русский</button>
+              <button class="lang-choice" data-lang="en">English</button>
+            </div>
+          </div>
+        </div>
+        <div id="update-status" class="update-status" data-i18n="upd_no_updates" style="display:none"></div>
+      </div>
+    </div>
+
+    <!-- ═══ О ПРОГРАММЕ ═══ -->
+    <div class="tab-panel" id="panel-about">
+      <div class="about-body">
+        <div class="about-logo">FLOW<span>TRUST</span></div>
+        <div class="about-version">v0.1.0</div>
+        <p class="about-desc" data-i18n="about_desc">FlowTrust — профессиональный инструмент мониторинга процессов и форензики для Windows.</p>
+        <div class="about-features">
+          <div class="about-feature"><span class="af-icon">⚙</span><span data-i18n="af_processes">Мониторинг процессов с деревом зависимостей и графиками CPU/RAM</span></div>
+          <div class="about-feature"><span class="af-icon">⬡</span><span data-i18n="af_network">Анализ сетевых соединений TCP/UDP в реальном времени</span></div>
+          <div class="about-feature"><span class="af-icon">▶</span><span data-i18n="af_startup">Управление записями автозагрузки реестра Windows</span></div>
+          <div class="about-feature"><span class="af-icon">⚠</span><span data-i18n="af_forensics">Форензика: проверка цифровых подписей и детектирование угроз</span></div>
+        </div>
+        <div class="about-links">
+          <button class="btn about-btn btn-donate" id="donate-btn"    data-i18n="donate_btn">❤ ПОДДЕРЖАТЬ РАЗРАБОТЧИКА</button>
+          <button class="btn about-btn"            id="tg-btn"        data-i18n="tg_contact">✈ TELEGRAM @Jimmy_Hawkins</button>
+          <button class="btn about-btn"            id="tg-channel-btn" data-i18n="tg_channel">📢 TELEGRAM-КАНАЛ</button>
+        </div>
+        <div class="about-copy" id="about-copy">© 2026 FlowTrust · Rust + Tauri</div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div class="statusbar-item"><div class="dot"></div><span data-i18n="status_active">АКТИВЕН</span></div>
+    <div class="statusbar-item"><div class="dot red"></div><span data-i18n="footer_critical">Критичных</span>: <strong id="critical-count">—</strong></div>
+    <div class="statusbar-item"><div class="dot amber"></div><span data-i18n="footer_threats">Угроз</span>: <strong id="threat-count">—</strong></div>
+    <div class="statusbar-item"><div class="dot"></div><span data-i18n="footer_total">Всего</span>: <strong id="total-count">—</strong></div>
+    <span id="last-refresh" data-i18n="wait_first">Ожидание первого обновления...</span>
+  </footer>
+
+</div>
+
+<!-- Глобальное контекстное меню -->
+<div id="ctx-menu" class="ctx-menu"></div>
+
+<script src="main.js"></script>
+</body>
+</html>
