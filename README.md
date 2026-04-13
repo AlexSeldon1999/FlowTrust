@@ -1,122 +1,147 @@
+<div align="center">
+
+<img src="src-tauri/icons/128x128.png" width="96" alt="FlowTrust Logo"/>
+
 # FlowTrust
 
-**FlowTrust** — профессиональный инструмент безопасности и мониторинга для Windows. Помогает обнаруживать вирусы, снимать ограничения, восстанавливать систему и управлять файлами — всё в одном приложении с современным интерфейсом.
+**Professional Windows Security & Forensics Toolkit**
 
-> **Professional Windows security & forensics toolkit** — detect threats, unlock restrictions, restore system integrity and manage files in one sleek dark-themed app.
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D4?logo=windows)](https://github.com/AlexSeldon1999/FlowTrust)
+[![Built with Tauri](https://img.shields.io/badge/Built%20with-Tauri%201.6-FFC131?logo=tauri)](https://tauri.app)
+[![Rust](https://img.shields.io/badge/Backend-Rust-CE422B?logo=rust)](https://www.rust-lang.org)
+[![Stars](https://img.shields.io/github/stars/AlexSeldon1999/FlowTrust?style=social)](https://github.com/AlexSeldon1999/FlowTrust/stargazers)
+
+*Обнаруживай угрозы. Снимай ограничения. Восстанавливай систему.*  
+*Detect threats. Unlock restrictions. Restore your system.*
+
+</div>
 
 ---
 
-## 🖥 Скриншоты / Screenshots
+## О проекте / About
 
-> _Добавьте скриншоты в папку `assets/` и раскомментируйте строки ниже_
->
-> <!-- ![Analysis](assets/screen-analysis.png) -->
-> <!-- ![Forensics](assets/screen-forensics.png) -->
+**FlowTrust** — комплексный инструмент безопасности для Windows, написанный на Rust + Tauri. Помогает обнаруживать вирусы, анализировать запущенные процессы, снимать вирусные ограничения и восстанавливать повреждённую систему — всё в одном приложении с современным тёмным интерфейсом.
+
+> FlowTrust is a comprehensive Windows security toolkit built on Rust + Tauri. It detects malware, analyzes running processes, removes virus-imposed restrictions, and restores damaged system settings — all in one sleek dark-themed app.
 
 ---
 
 ## ✨ Возможности / Features
 
-### 🔬 Анализ процессов / Process Analysis
-- Полный список запущенных процессов с деревом зависимостей (родитель → дочерние)
-- CPU и RAM в реальном времени с мини-графиком нагрузки
-- Статус: Критичный / Подозрительный / Система / Безопасен
+<table>
+<tr>
+<td width="50%">
+
+### 🔬 Анализ процессов
+- Дерево процессов (родитель → дочерние)
+- CPU и RAM в реальном времени + мини-графики
+- Статусы: Критичный / Подозрительный / Система / Безопасен
 - Проверка цифровой подписи (WinVerifyTrust)
-- **Снятие критичности** — убирает флаг `ProcessBreakOnTermination` у вирусов, использующих его для защиты от завершения (иначе BSOD)
-- Завершение процессов с контекстным меню
+- **Снятие `ProcessBreakOnTermination`** — убирает защиту вирусов от завершения (BSOD)
 - Просмотр загруженных DLL по PID
-- Экспорт списка в JSON
 
----
+</td>
+<td width="50%">
 
-### 🌐 Сеть / Network
+### 🌐 Сеть
 - Все активные TCP/UDP соединения с PID-привязкой
 - Состояния: ESTABLISHED, LISTEN, CLOSE_WAIT и др.
 - Принудительное закрытие TCP-соединений
 - Поиск по адресу, порту, имени процесса
 
----
+</td>
+</tr>
+<tr>
+<td>
 
-### 🚀 Автозагрузка / Startup Manager
+### 🚀 Автозагрузка
 - Реестр: `Run`, `RunOnce` (HKLM + HKCU + WOW64)
 - Winlogon: `Shell`, `Userinit`, `UIHost`
 - `AppInit_DLLs` (HKLM + WOW64)
-- Планировщик задач через PowerShell
-- Фильтрация по источнику, поиск
+- Планировщик задач (Scheduled Tasks)
 - Удаление и редактирование записей
 
----
+</td>
+<td>
 
-### 🔍 Форензика / Forensics
-- Обнаружение угроз: маскировка, подозрительные пути, отсутствие образа, отсутствие подписи
-- Уровень риска в % для каждого процесса
-- Отправка на VirusTotal (SHA-256) одним кликом
-- Карантин: перемещение с переименованием в `.quarantined`
+### 🔍 Форензика
+- Обнаружение угроз: маскировка, подозрительные пути, отсутствие подписи
+- Отправка на VirusTotal по SHA-256 одним кликом
+- **Карантин**: перемещение файла в `%APPDATA%\FlowTrust\Quarantine\`
 - Удаление вредоносных файлов
-- Контекстное меню с быстрыми действиями
 
----
+</td>
+</tr>
+<tr>
+<td>
 
-### 🔓 Разблокировка / Unlock
-Автоматическое обнаружение и снятие **23 ограничений**, устанавливаемых вирусами:
+### 🔓 Разблокировка (25+ ограничений)
+Автоматически снимает вирусные ограничения:
 
 | Ограничение | Ключ реестра |
 |---|---|
 | Диспетчер задач | `DisableTaskMgr` |
 | Редактор реестра | `DisableRegistryTools` |
 | Командная строка | `DisableCMD` |
-| Панель управления | `NoControlPanel` |
-| UAC отключён | `EnableLUA` |
+| UAC | `EnableLUA` |
 | Windows Defender | `DisableAntiSpyware` |
-| Защита в реальном времени | `DisableRealtimeMonitoring` |
-| Брандмауэр (GPO) | `EnableFirewall` |
-| Принудительный прокси | `ProxyEnable` |
-| Ремап клавиатуры | `Scancode Map` |
-| Shell Winlogon | `Shell` |
-| … и ещё 12 |  |
+| Брандмауэр | `EnableFirewall` |
+| IFEO hijacking | `Debugger` |
+| … и ещё 18+ | |
 
----
+</td>
+<td>
 
-### 🛠 Инструменты / Tools
-- **SFC /scannow** — проверка целостности системных файлов
-- **bootrec** — восстановление MBR, VBR, перестройка BCD
-- **Восстановление LogonUI** — экран входа Windows
+### 🛠 Инструменты
+- **SFC /scannow** — целостность системных файлов
+- **bootrec** — восстановление MBR, VBR, BCD
+- **LogonUI** — восстановление экрана входа
 - **Сброс ассоциаций файлов** (.exe, .bat, .reg, .lnk, .msi)
 - **Восстановление sethc.exe / utilman.exe** (антибэкдор)
-- **Сброс Hosts-файла** и настроек прокси
-- **Восстановление мыши и клавиатуры**
-- **Поиск скрытых процессов** (руткит-детектор: TlHelp32 + PSAPI + OpenProcess brute-force)
-- **Просмотр DLL** для любого процесса по PID
-- **Встроенный браузер** с закладками: VirusTotal, Any.run, Hybrid Analysis
+- **Сброс Hosts-файла** и прокси-настроек
+- **Руткит-детектор**: TlHelp32 + PSAPI + brute-force OpenProcess
+- **Встроенный браузер**: VirusTotal, Any.run, Hybrid Analysis
 
----
+</td>
+</tr>
+<tr>
+<td>
 
-### 📁 Файловый менеджер / File Manager
-- Работает **без explorer.exe** — напрямую через Win32 API
-- Поддержка скрытых и системных файлов (атрибуты H/S/R)
+### 📁 Файловый менеджер
+- Работает **без explorer.exe** — через Win32 API
+- Поддержка скрытых и системных файлов (H/S/R)
 - Адресная строка с хлебными крошками
 - Панель дисков с индикатором заполнения
-- Операции: копировать, вставить, переименовать, удалить, создать папку
-- Контекстное меню с проверкой через VirusTotal
-- Поиск по имени файла
+- Операции: копировать, переименовать, удалить, создать папку
+- Проверка файлов через VirusTotal
 
----
+</td>
+<td>
 
-### ⚙ Настройки / Settings
-- Поверх всех окон
-- Уведомления о новых угрозах
-- Режим маскировки заголовка окна (обход мониторинга)
-- Переключение языка RU / EN
-- Проверка обновлений
+### ⚙ Настройки
+- Поверх всех окон (Always on Top)
+- Уведомления об угрозах
+- Режим маскировки заголовка окна
+- Автообновление списка процессов
+- Переключение языка 🇷🇺 RU / 🇬🇧 EN
+- Сворачивание в системный трей
+
+</td>
+</tr>
+</table>
 
 ---
 
 ## 🔧 Сборка / Build
 
 ### Требования / Requirements
-- [Rust](https://rustup.rs/) 1.75+
-- [Node.js](https://nodejs.org/) 18+
-- Windows 10/11 (x64)
+
+| Компонент | Версия |
+|---|---|
+| [Rust](https://rustup.rs/) | 1.75+ |
+| [Node.js](https://nodejs.org/) | 18+ |
+| Windows | 10/11 x64 |
 
 ### Запуск в режиме разработки / Dev mode
 ```bash
@@ -129,7 +154,7 @@ npm run tauri dev
 npm run tauri build
 ```
 
-Артефакты появятся в:
+Артефакты / Artifacts:
 ```
 src-tauri/target/release/bundle/
   msi/FlowTrust_x64_en-US.msi
@@ -138,31 +163,37 @@ src-tauri/target/release/bundle/
 
 ---
 
-## ⚠ Права / Permissions
+## ⚠ Права администратора / Admin rights
 
-Некоторые функции (SFC, MBR, Winlogon, реестр HKLM, Defender) требуют **запуска от имени администратора**.
+Для полного функционала запускай от имени администратора.  
+Some features require **Administrator privileges** to work correctly:
 
-> Some features (SFC, MBR repair, HKLM registry, Defender policies) require **Administrator privileges**.
-
----
-
-## 🛡 Отказ от ответственности / Disclaimer
-
-FlowTrust предназначен **исключительно для защитных целей**: диагностики, восстановления системы и обнаружения вредоносного ПО. Использование функций (например, `set_accessibility_backdoor`) в нелегитимных целях запрещено.
-
-> FlowTrust is intended **solely for defensive use**: system diagnostics, recovery, and malware detection. Misuse of any functionality for unauthorized access is prohibited.
+- SFC, MBR/BCD repair
+- HKLM registry operations
+- Windows Defender policies
+- Снятие `ProcessBreakOnTermination` у защищённых процессов
 
 ---
 
-## 📦 Технологии / Tech Stack
+## 📦 Стек / Tech Stack
 
 | Компонент | Технология |
 |---|---|
 | Backend | Rust + Tauri 1.6 |
 | Frontend | HTML5 / CSS3 / Vanilla JS |
 | Win32 API | windows-rs 0.52 |
+| NT API | NtSetInformationProcess, NtQueryInformationProcess |
 | Хэширование | sha2 0.10 |
-| Упаковщик | NSIS / MSI |
+| Подписи | WinVerifyTrust (wintrust.dll) |
+| Установщик | NSIS / MSI |
+
+---
+
+## 🛡 Отказ от ответственности / Disclaimer
+
+FlowTrust предназначен **исключительно для защитных целей**: диагностики, восстановления системы и обнаружения вредоносного ПО.
+
+> FlowTrust is intended **solely for defensive use**: system diagnostics, recovery, and malware detection. Misuse for unauthorized access is prohibited.
 
 ---
 
@@ -174,6 +205,4 @@ FlowTrust предназначен **исключительно для защи�
 
 ## 📄 Лицензия / License
 
-MIT License — свободное использование с сохранением указания авторства.
-
-> MIT License — free to use with attribution.
+[MIT License](LICENSE) — свободное использование с сохранением указания авторства.
